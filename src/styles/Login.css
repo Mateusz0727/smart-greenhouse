@@ -1,0 +1,86 @@
+/* Login.css */
+
+.main {
+  display: flex;
+  height: 100vh;
+  font-family: 'Arial', sans-serif;
+}
+
+/* Lewa część: logo i nazwa */
+.left {
+  background-color: #00695C; /* ciemnozielony */
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: white;
+}
+
+.left h1 {
+  font-size: 2rem;
+  margin-top: 1rem;
+}
+
+/* Prawa część: formularz logowania */
+.right {
+  background-color: #A7D7C5; /* jasny zielony */
+  flex: 2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.login-box {
+    align-items: center;
+  background-color: #FFFFFF; /* białe tło formularza */
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  min-width: 300px;
+}
+
+.login-box h2 {
+  margin-bottom: 1rem;
+  color: #333333;
+}
+
+.login-box input {
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border: 1px solid #CCCCCC;
+  border-radius: 8px;
+}
+
+.login-box button {
+  background-color: #00695C; /* ciemnozielony */
+  color: white;
+  border: none;
+  padding: 0.75rem;
+  width: 100%;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.login-box button:hover {
+  background-color: #004D40; /* ciemniejszy zielony */
+}
+
+.login-box .forgot-password {
+  text-align: center;
+  margin-top: 1rem;
+  color: #333333;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.login-box .forgot-password:hover {
+  text-decoration: underline;
+}
+.login-box input,
+.login-box button {
+  width: 100%;
+  box-sizing: border-box; /* uwzględnia padding i border w width */
+}

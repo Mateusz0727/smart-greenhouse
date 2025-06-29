@@ -1,0 +1,72 @@
+.dashboard {
+  display: flex;
+  height: 100vh;
+  font-family: Arial, sans-serif;
+}
+
+/* Sidebar (ciemnozielony) */
+.sidebar {
+  background-color: #00695C;
+  color: white;
+  width: 220px;
+  padding-top: 20px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  
+}
+
+.sidebar h1 {
+  font-size: 1.5rem;
+  margin: 0 0 20px 0;
+  text-align: center;
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  /* gap: 10px; */
+}
+
+.menu .button {
+  background-color: transparent;
+  border: 0px solid white;
+  color: white;
+  padding: 20px;
+  /* border-radius: 8px; */
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s, color 0.3s;
+  text-align: left;
+  text-decoration: none;
+}
+
+.menu .button:hover {
+  background-color: #A7D7C5;
+  color: #00695C;
+}
+
+.main-content {
+  flex: 1;
+  background-color: #F5F5F5;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  background-color: #A7D7C5;
+  color: white;
+  padding: 15px 20px;
+}
+
+.header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.content {
+  flex: 1;
+  padding: 20px;
+}
