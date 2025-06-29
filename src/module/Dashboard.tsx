@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Routes, Route, Link } from "react-router-dom";
-import BluetoothESP from "../component/Bluetooth";
+import BluetoothESP from "./Bluetooth";
 import "../styles/Dashboard.css";
 import { CiTimer, CiTempHigh } from "react-icons/ci";
 import api from "../axios";
 import {jwtDecode} from "jwt-decode";
+import Header from "../component/Header";
 
 interface User {
   id: string;
@@ -23,11 +24,11 @@ function Dashboard() {
         const token = localStorage.getItem("accessToken");
         if (!token) return;
 
-        // 🧠 Odczytaj userId z tokena
         const decoded: any = jwtDecode(token);
         const userId = decoded.sub;
 
         const response = await api.get(`/user?id=${userId}`);
+        
         setUser(response.data);
       } catch (error) {
         console.error("Błąd pobierania danych użytkownika:", error);
@@ -51,14 +52,7 @@ function Dashboard() {
       </div>
 
       <div className="main-content">
-        <header className="header">
-          <h2>Dashboard</h2>
-          {user && (
-            <div className="user-info">
-              <span>Użytkownik: {user.firstName} {user.lastName} ({user.email})</span>
-            </div>
-          )}
-        </header>
+        <Header/>
         <div className="content">
           <Routes>
             <Route path="/" element={<p>Witaj w SmartGreenhouse!</p>} />

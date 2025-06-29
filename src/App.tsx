@@ -1,5 +1,5 @@
 import React, { JSX } from 'react';
-import BluetoothESP from './component/Bluetooth';
+import BluetoothESP from './module/Bluetooth';
 import Login from './module/Login';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import Dashboard from './module/Dashboard';
