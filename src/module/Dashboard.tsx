@@ -1,22 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { Routes, Route, Link } from "react-router-dom";
-import BluetoothESP from "./Bluetooth";
+import EspConnection from "../component/EspConnection";
 import "../styles/Dashboard.css";
 import { CiTimer, CiTempHigh } from "react-icons/ci";
 import api from "../axios";
 import {jwtDecode} from "jwt-decode";
 import Header from "../component/Header";
+import EspStatus from "./EspStatus";
+import { User } from "../services/UserService";
 
-interface User {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  role: string;
-}
 
 function Dashboard() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User>(
+    { id: "", email: "", firstName: "", lastName: "", role: "" }
+  );
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -56,7 +53,7 @@ function Dashboard() {
         <div className="content">
           <Routes>
             <Route path="/" element={<p>Witaj w SmartGreenhouse!</p>} />
-            <Route path="connect" element={<BluetoothESP />} />
+           <Route path="connect" element={user.id ? <EspStatus userId={user.id} /> : <p>Ładowanie...</p>} />
           </Routes>
         </div>
       </div>

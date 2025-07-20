@@ -2,7 +2,7 @@ import axios from "axios";
 import { getAccessToken, saveAccessToken } from "./services/AuthService";
 
 const api = axios.create({
-  baseURL: "https://localhost:7118",
+  baseURL: "http://192.168.0.24",
   withCredentials: true 
 });
 api.interceptors.request.use(config => {
@@ -18,7 +18,6 @@ let isRefreshing = false;
 api.interceptors.response.use(
   response => response,
   async error => {
-    debugger;
     const originalRequest = error.config;
 
     if (error.response?.status === 401 && !originalRequest._retry) {
@@ -27,8 +26,8 @@ api.interceptors.response.use(
       if (!isRefreshing) {
         isRefreshing = true;
         try {
-          const res = await refreshAccessToken();
-          const newToken = res.data.accessToken;
+          const newToken = await refreshAccessToken();
+         
 
           saveAccessToken(newToken);
           api.defaults.headers.Authorization = `Bearer ${newToken}`;
@@ -50,15 +49,13 @@ api.interceptors.response.use(
   }
 );
 const refreshAccessToken = async () => {
-  const refreshToken = localStorage.getItem("refreshToken");
-  if (!refreshToken) throw new Error("Brak refresh tokena");
-
-  const response = await api.post("users/refresh", {
-    refreshToken: refreshToken,
-  });
-
-  const newAccessToken = response.data.accessToken;
-  localStorage.setItem("accessToken", newAccessToken);
-  return newAccessToken;
+  try {
+    const response = await api.post("users/refresh");
+    const newAccessToken = response.data.accessToken;
+    localStorage.setItem("accessToken", newAccessToken);
+    return newAccessToken;
+  } catch (err) {
+    throw new Error("Nie udało się odświeżyć tokena");
+  }
 };
 export default api;
