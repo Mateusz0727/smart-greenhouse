@@ -2,7 +2,7 @@ import axios from "axios";
 import { getAccessToken, saveAccessToken } from "./services/AuthService";
 
 const api = axios.create({
-  baseURL: "http://192.168.0.24",
+  baseURL: "http://localhost",
   withCredentials: true 
 });
 api.interceptors.request.use(config => {

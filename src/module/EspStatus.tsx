@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { getUserHasDevices } from "../services/EspConnectionService";
 import EspConnection from "../component/EspConnection";
+import RelayToggle from "../component/RelayToggle";
+import SmartGreenhouseControl from "./ControlPanel";
 
 const EspStatus = ({ userId }: { userId: string }) => {
   const [hasDevice, setHasDevice] = useState<boolean | null>(null);
@@ -20,7 +22,7 @@ const EspStatus = ({ userId }: { userId: string }) => {
   return (
     <div>
       {hasDevice === null && <p>Ładowanie...</p>}
-      {hasDevice === true && <p>Masz urządzenie ESP</p>}
+      {hasDevice === true && <SmartGreenhouseControl userId={userId}/>}
       {hasDevice === false && <p><EspConnection/></p>}
     </div>
   );
