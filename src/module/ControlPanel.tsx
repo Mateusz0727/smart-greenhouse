@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import {jwtDecode} from "jwt-decode";
 import "../styles/DevicesPanel.css";
 import { Device, getDevices, getRelayState, toggleRelayState } from "../services/ConstrolService";
 
@@ -91,7 +90,6 @@ const ControlPanel = ({ userId }: { userId: string }) => {
 
   return (
     <div className="devices-panel">
-      {/* Lewa kolumna - lista urządzeń */}
       <div className="devices-list">
         <h3>Urządzenia</h3>
             {devices.map((device) => (
@@ -111,9 +109,9 @@ const ControlPanel = ({ userId }: { userId: string }) => {
                       setEditNameForDevice(null);
                     }}
                   >
-                    💾
+                    Save
                   </button>
-                  <button onClick={() => setEditNameForDevice(null)}>❌</button>
+                  <button className="cancel" onClick={() => setEditNameForDevice(null)}>Cancel</button>
                 </div>
               ) : (
                 <>
@@ -129,12 +127,12 @@ const ControlPanel = ({ userId }: { userId: string }) => {
                     <span
                       className="edit-icon"
                       onClick={(e) => {
-                        e.stopPropagation(); // zapobiega wybraniu urządzenia
+                        e.stopPropagation();
                         setEditNameForDevice(device.deviceId);
                         setEditedName(device.name);
                       }}
                     >
-                      ✏️
+                      Edit
                     </span>
                   </button>
           </>
@@ -201,7 +199,7 @@ const ControlPanel = ({ userId }: { userId: string }) => {
       className="refresh-btn"
       onClick={() => alert("Odświeżanie danych...")}
     >
-      Odśwież dane
+      Refresh 
     </button>
   </div>
 ) : (

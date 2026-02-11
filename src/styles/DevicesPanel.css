@@ -114,3 +114,40 @@
 .no-devices {
   padding: 20px;
 }
+.device-edit input {
+  width: 100%;
+  padding: 0.75rem;
+  margin-right: 0.5rem;
+  border: 1px solid #CCCCCC;
+  border-radius: 8px;
+  box-sizing: border-box;
+  font-family: 'Arial', sans-serif;
+}
+
+.device-edit button {
+  background-color: #3aafa9;
+  color: white;
+  border: none;
+  padding: 0.5rem 0.75rem;
+  margin-left: 0.25rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+.device-edit .cancel {
+  background-color: #2b7a78;
+  color: white;
+}
+.device-edit button:hover {
+  background-color: #00766f;
+}
+
+.device-edit .cancel:hover {
+  background-color: #1b5a59;
+}
+
+.device-edit {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}

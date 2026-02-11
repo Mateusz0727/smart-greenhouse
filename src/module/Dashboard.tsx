@@ -8,7 +8,7 @@ import {jwtDecode} from "jwt-decode";
 import Header from "../component/Header";
 import EspStatus from "./EspStatus";
 import { User } from "../services/UserService";
-
+import TemperatureTrends, { TemperatureData } from "../component/TemperatureTrends";
 
 function Dashboard() {
   const [user, setUser] = useState<User>(
@@ -34,7 +34,21 @@ function Dashboard() {
 
     fetchUserData();
   }, []);
-
+const exampleData: TemperatureData[] = [
+  {
+    deviceId: "abc123",
+    date: "2025-07-01",
+    dayAvgTemperature: 25.1,
+    nightAvgTemperature: 14.3,
+  },
+  {
+    deviceId: "abc123",
+    date: "2025-07-02",
+    dayAvgTemperature: 26.2,
+    nightAvgTemperature: 13.9,
+  },
+  // ...
+];
   return (
     <div className="dashboard">
       <div className="sidebar">
@@ -52,7 +66,7 @@ function Dashboard() {
         <Header/>
         <div className="content">
           <Routes>
-            <Route path="/" element={<p>Witaj w SmartGreenhouse!</p>} />
+            <Route path="/" element={<TemperatureTrends data={exampleData} />} />
            <Route path="connect" element={user.id ? <EspStatus userId={user.id} /> : <p>Ładowanie...</p>} />
           </Routes>
         </div>
