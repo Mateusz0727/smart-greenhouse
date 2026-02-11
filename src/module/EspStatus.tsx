@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { getUserHasDevices } from "../services/EspConnectionService";
 import EspConnection from "../component/EspConnection";
-import RelayToggle from "../component/RelayToggle";
 import SmartGreenhouseControl from "./ControlPanel";
 
 const EspStatus = ({ userId }: { userId: string }) => {

@@ -1,14 +1,9 @@
 import React, { useState, useEffect } from "react";
 import "../styles/DevicesPanel.css";
-import { Device, getDevices, getRelayState, toggleRelayState } from "../services/ConstrolService";
+import { Device, getDevices, toggleRelayState } from "../services/ConstrolService";
 
 const LOCAL_STORAGE_JWT_KEY = "accessToken";
 
-
-
-interface DecodedToken {
-  device_id?: string;
-}
 
 function ToggleSwitch({
   label,
