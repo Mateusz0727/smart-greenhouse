@@ -10,8 +10,7 @@ import {
 const EspConnection: React.FC = () => {
   const [networks, setNetworks] = useState<WifiNetwork[]>([]);
   const [message, setMessage] = useState("");
-  const [characteristicNotify, setCharacteristicNotify] =
-    useState<BluetoothRemoteGATTCharacteristic | null>(null);
+ 
   const [characteristicWrite, setCharacteristicWrite] =
     useState<BluetoothRemoteGATTCharacteristic | null>(null);
   const [selectedNetwork, setSelectedNetwork] = useState<string | null>(null);

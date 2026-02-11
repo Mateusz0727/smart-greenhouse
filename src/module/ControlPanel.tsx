@@ -78,7 +78,7 @@ const ControlPanel = ({ userId }: { userId: string }) => {
   };
 
   fetchDevices();
-}, []);
+}, [userId]);
 
   if (error) {
     return <div className="error">{error}</div>;

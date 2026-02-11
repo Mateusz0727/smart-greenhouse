@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Routes, Route, Link } from "react-router-dom";
-import EspConnection from "../component/EspConnection";
 import "../styles/Dashboard.css";
 import { CiTimer, CiTempHigh } from "react-icons/ci";
 import api from "../axios";
