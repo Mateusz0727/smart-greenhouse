@@ -77,7 +77,7 @@ const EspConnection: React.FC = () => {
             {networks.map((net, idx) => (
               <tr key={idx}>
                 <td>
-                  {net.encryption === "secured" ? <GrSecure /> : ""} {net.ssid}
+                 {net.encryption === "secured" ? (React.createElement(GrSecure as any)) : ""} {net.ssid}
                 </td>
                 <td>
                   <button
