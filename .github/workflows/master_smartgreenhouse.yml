@@ -25,10 +25,12 @@ jobs:
 
       - name: npm install, build, and test
         run: |
-          npm install
-          $env:CI="false"
-          npm run build
-          npm run test -- --passWithNoTests
+              npm install
+              $env:CI="false"
+              # Pobieramy zmienną z GitHub Variables i ustawiamy jako zmienną środowiskową builda
+              $env:REACT_APP_API_URL="${{ vars.REACT_APP_API_URL }}"
+              npm run build
+              npm run test -- --passWithNoTests
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4

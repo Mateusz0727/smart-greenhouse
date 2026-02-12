@@ -2,9 +2,10 @@ import axios from "axios";
 import { getAccessToken, saveAccessToken } from "./services/AuthService";
 
 const api = axios.create({
-  baseURL: "http://localhost",
+  baseURL: process.env.REACT_APP_API_URL,
   withCredentials: true 
 });
+
 api.interceptors.request.use(config => {
   const token = getAccessToken();
   if (token) {
