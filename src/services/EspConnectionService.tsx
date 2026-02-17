@@ -1,134 +1,164 @@
+import { WifiNetwork } from '../types';
 import api from "../axios";
-import authHeader from "./AuthService";
 
-export interface WifiNetwork {
-  ssid: string;
-  rssi: number;
-  encryption: string;
-}
+export { type WifiNetwork };
 
-export interface BluetoothConnection {
-  notifyCharacteristic: BluetoothRemoteGATTCharacteristic;
-  writeCharacteristic: BluetoothRemoteGATTCharacteristic;
-  device: BluetoothDevice;
-}
+// UUIDs zgodne z kodem ESP32 (Nordic UART Service)
+const SERVICE_UUID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
+const CHARACTERISTIC_UUID_RX = "6e400002-b5a3-f393-e0a9-e50e24dcca9e"; // Write (Telefon -> ESP)
+const CHARACTERISTIC_UUID_TX = "6e400003-b5a3-f393-e0a9-e50e24dcca9e"; // Notify (ESP -> Telefon)
 
 export const connectToESP = async (
-  onNetworksReceived: (networks: WifiNetwork[]) => void,
-  onWifiConnected: () => void,
-  onError: (message: string) => void
-): Promise<BluetoothConnection | null> => {
+  userId: string,
+  setNetworks: (networks: WifiNetwork[]) => void,
+  onSuccess: () => void,
+  setMessage: (msg: string) => void
+): Promise<{ writeCharacteristic: any } | null> => {
+  const nav = navigator as any;
+  if (!nav.bluetooth) {
+    setMessage("Twoja przeglądarka nie obsługuje Web Bluetooth.");
+    return null;
+  }
+
   try {
-    const device = await navigator.bluetooth.requestDevice({
+    setMessage("Szukanie urządzenia ESP32...");
+    const device = await nav.bluetooth.requestDevice({
       filters: [{ namePrefix: "ESP32" }],
-      optionalServices: ["6e400001-b5a3-f393-e0a9-e50e24dcca9e"]
+      optionalServices: [SERVICE_UUID],
     });
 
     if (!device.gatt) {
-      onError("Urządzenie nie obsługuje GATT");
-      return null;
+        throw new Error("Urządzenie nie obsługuje GATT");
     }
 
+    setMessage("Łączenie z GATT...");
     const server = await device.gatt.connect();
-    const service = await server.getPrimaryService("6e400001-b5a3-f393-e0a9-e50e24dcca9e");
 
-    const notifyChar = await service.getCharacteristic("6e400003-b5a3-f393-e0a9-e50e24dcca9e");
-    const writeChar = await service.getCharacteristic("6e400002-b5a3-f393-e0a9-e50e24dcca9e");
+    setMessage("Pobieranie usług...");
+    const service = await server.getPrimaryService(SERVICE_UUID);
 
-    await notifyChar.startNotifications();
+    setMessage("Konfiguracja kanałów komunikacji...");
+    const rxCharacteristic = await service.getCharacteristic(CHARACTERISTIC_UUID_RX);
+    const txCharacteristic = await service.getCharacteristic(CHARACTERISTIC_UUID_TX);
 
-    notifyChar.addEventListener("characteristicvaluechanged", async (event: Event) => {
-      const target = event.target as BluetoothRemoteGATTCharacteristic;
-      const value = target?.value;
-      if (!value) return;
+    // Obsługa powiadomień
+    txCharacteristic.addEventListener(
+      "characteristicvaluechanged",
+      async (event: any) => {
+        const value = event.target.value;
+        const decoder = new TextDecoder("utf-8");
+        const jsonString = decoder.decode(value);
 
-      const raw = new TextDecoder().decode(value);
-
-      try {
-        const json = JSON.parse(raw);
-
-        if (Array.isArray(json.networks)) {
-          onNetworksReceived(json.networks);
-        } else if (json.wifi === "connected") {
-          console.log("✅ ESP połączone z Wi-Fi!");
-          onWifiConnected();
-
-          const deviceTokenResponse = await pairDeviceWithApi(device.id);
+        try {
+          // Logowanie surowych danych dla debugowania
+          console.log("ESP RX:", jsonString);
+          const data = JSON.parse(jsonString);
           
-          const deviceToken = deviceTokenResponse?.data;
-          if (!deviceToken) {
-            onError("Nie udało się pobrać tokena z API");
-            return;
+          // 1. Odbiór listy sieci
+          if (data.networks && Array.isArray(data.networks)) {
+             setNetworks(data.networks);
+             setMessage("Znaleziono sieci Wi-Fi. Wybierz jedną z listy.");
+          } 
+          // 2. Potwierdzenie połączenia z WiFi -> Start procedury Tokenu
+          else if (data.wifi === "connected") {
+             setMessage("Wi-Fi połączone! Pobieranie tokenu...");
+             
+             try {
+                // Generujemy token dla urządzenia w backendzie
+                const token = await pairDeviceWithApi(device.id, userId); 
+                console.log("Token z API:", token);
+                if (token) {
+                   setMessage("Wysyłanie tokenu autoryzacyjnego...");
+                   await sendTokenInChunks(rxCharacteristic, token);
+                   setMessage("Token wysłany. Czekam na potwierdzenie urządzenia...");
+                   // WAŻNE: Tu jeszcze nie wołamy onSuccess! Czekamy na 'jwt_received'
+                } else {
+                   setMessage("Błąd: Nie udało się uzyskać tokenu z API.");
+                }
+             } catch (err) {
+                console.error("Pairing error:", err);
+                setMessage("Błąd parowania urządzenia z kontem.");
+             }
+          } 
+          // 3. Odbiór potwierdzenia odebrania tokenu (Nowa logika)
+          else if (data.status === "jwt_received" || data.status === "config_complete") {
+             console.log("Potwierdzenie JWT od ESP otrzymane.");
+             setMessage("Urządzenie skonfigurowane pomyślnie!");
+             onSuccess(); // Dopiero teraz przełączamy widok
           }
-
-          // 🧩 podziel token i wyślij w kawałkach
-          await sendTokenInChunks(writeChar, deviceToken);
-          console.log("🔐 Token API wysłany do ESP");
-        } else {
-          onError("Nieznany format wiadomości z ESP");
+          // 4. Obsługa błędów
+          else if (data.status === "error") {
+             setMessage("Błąd połączenia ESP32 z Wi-Fi. Sprawdź hasło.");
+          }
+        } catch (e) {
+          // Ignorujemy błędy parsowania JSON (mogą przychodzić fragmenty logów)
+          console.log("Dane nie są JSONem:", jsonString);
         }
-
-      } catch (err) {
-        console.error("Błąd parsowania JSON:", err);
-        onError("Błąd parsowania danych z ESP");
       }
-    });
+    );
 
-    return {
-      notifyCharacteristic: notifyChar,
-      writeCharacteristic: writeChar,
-      device
-    };
-  } catch (error) {
-    console.error("Błąd podczas połączenia:", error);
-    onError("Błąd podczas łączenia z ESP32");
+    await txCharacteristic.startNotifications();
+    setMessage("Połączono! Czekam na listę sieci...");
+
+    return { writeCharacteristic: rxCharacteristic };
+
+  } catch (error: any) {
+    console.error("Błąd Bluetooth:", error);
+    setMessage(`Błąd: ${error.message || "Nie udało się połączyć"}`);
     return null;
   }
 };
+
+export const sendWifiCredentials = async (
+    characteristic: any, 
+    ssid: string, 
+    pass: string
+) => {
+  const encoder = new TextEncoder();
+  const data = JSON.stringify({ ssid, password: pass });
+  await characteristic.writeValue(encoder.encode(data));
+};
+
+const pairDeviceWithApi = async (bluetoothDeviceId: string, userId: string): Promise<string | null> => {
+  try {
+     const response = await api.post("/devices/pair", {
+        deviceId: bluetoothDeviceId,
+        userId: userId,
+        type: "ESP32_GROW_BOX"
+     });
+     return  response.data||response;
+  } catch (error) {
+     console.error("API Pairing Error", error);
+     return null;
+  }
+};
+
 const sendTokenInChunks = async (
-  writeCharacteristic: BluetoothRemoteGATTCharacteristic,
+  characteristic: any,
   token: string
 ) => {
   const encoder = new TextEncoder();
-  const chunkSize = 180;
+  const chunkSize = 20; // Bezpieczny rozmiar MTU
 
-  await writeCharacteristic.writeValue(encoder.encode("__BEGIN__"));
-  await delay(30);
+  await characteristic.writeValue(encoder.encode("__BEGIN__"));
+  await delay(50);
 
   for (let i = 0; i < token.length; i += chunkSize) {
     const chunk = token.slice(i, i + chunkSize);
-    await writeCharacteristic.writeValue(encoder.encode(chunk));
-    await delay(30);
+    await characteristic.writeValue(encoder.encode(chunk));
+    await delay(50); 
   }
 
- 
-  await writeCharacteristic.writeValue(encoder.encode("__END__"));
+  await characteristic.writeValue(encoder.encode("__END__"));
 };
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-export const pairDeviceWithApi = (deviceId: string) => {
-  return api.post("devices/pair", {
-   deviceId
-  });
-};
+
 export const getUserHasDevices = async (userId: string): Promise<boolean> => {
-  try {
-    const response = await api.get("/hasDevice", {
-      params: { id: userId },
-      headers: authHeader(),
-    });
-    return response.data;
-  } catch (error) {
-    console.error("Błąd podczas pobierania informacji o urządzeniach:", error);
-    throw error;
-  }
-};
-export const sendWifiCredentials = async (
-  writeCharacteristic: BluetoothRemoteGATTCharacteristic,
-  ssid: string,
-  password: string
-): Promise<void> => {
-  const payload = JSON.stringify({ ssid, password });
-  const encoded = new TextEncoder().encode(payload);
-  await writeCharacteristic.writeValue(encoded);
+    try {
+        const response = await api.get(`/hasDevice?id=${userId}`);
+        return response.data === true;
+    } catch (error) {
+        return false;
+    }
 };

@@ -1,63 +1,77 @@
 import React, { useState, useEffect, useRef } from 'react';
-import '../styles/header.css';
-import { logout } from '../services/AuthService';
 import { useNavigate } from 'react-router-dom';
+import { logout } from '../services/AuthService';
+import { User } from '../types';
+import '../styles/header.css';
 
-export default function Header() {
+interface HeaderProps {
+    user: User;
+}
+
+export default function Header({ user }: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-   const navigate = useNavigate();
-    const handleLogout = async () => {
-    
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
     try {
         await logout();
-        navigate("/");
     } catch (error) {
-        alert("Błąd wylogowania.");
         console.error("Logout error", error);
-    } 
-    };
-  const toggleMenu = (): void => {
-    setMenuOpen(!menuOpen);
+    } finally {
+        localStorage.removeItem("accessToken");
+        navigate("/");
+    }
   };
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent): void => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setMenuOpen(false);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   return (
-    <header className="sg-header">
-      <div className="sg-header-left">
-        <h1>Dashboard</h1>
-      
+    <header className="header-container">
+      <div className="header-left">
+        <h2>Panel Sterowania</h2>
+        <p>Witaj, {user.firstName || 'Użytkowniku'}</p>
       </div>
 
-      <div className="sg-header-right" ref={dropdownRef}>
-        <img
-          src="/avatar.png"
-          alt="Avatar"
-          className="sg-avatar"
-          onClick={toggleMenu}
-        />
-        {menuOpen && (
-            <div className="sg-dropdown">
-                <button className="sg-dropdown-btn">Profil</button>
-                <button className="sg-dropdown-btn">Ustawienia</button>
-                <button className="sg-dropdown-btn" onClick={handleLogout}>Wyloguj</button>
+      <div className="header-right" ref={dropdownRef}>
+        <button 
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="user-btn"
+        >
+            <div className="user-info">
+                <p className="user-email">{user.email || 'user@example.com'}</p>
+                <p className="user-role">{user.role || 'Admin'}</p>
             </div>
-            )}
+            <div className="user-avatar">
+               <img src="https://picsum.photos/200" alt="Avatar" />
+            </div>
+        </button>
+
+        {menuOpen && (
+            <div className="dropdown-menu">
+                <button className="dropdown-item">
+                    Mój Profil
+                </button>
+                <button className="dropdown-item">
+                    Ustawienia
+                </button>
+                <div className="dropdown-divider"></div>
+                <button 
+                    onClick={handleLogout}
+                    className="dropdown-item logout"
+                >
+                    Wyloguj
+                </button>
+            </div>
+        )}
       </div>
     </header>
   );
