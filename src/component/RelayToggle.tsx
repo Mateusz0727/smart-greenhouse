@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import React, { useState } from 'react'
+import api from '../axios';
 
 interface RelayToggleProps {
   deviceId: string;
@@ -28,7 +28,7 @@ const RelayToggle: React.FC<RelayToggleProps> = ({ deviceId, relayName }) => {
     };
 
     try {
-      await axios.post('http://localhost/api/relay', payload);
+      await api.post("/relay", { payload });
       console.log('✅ Wysłano do API:', payload);
     } catch (error) {
       console.error('❌ Błąd API:', error);
