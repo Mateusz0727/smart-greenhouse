@@ -51,7 +51,6 @@ interface ControlPanelProps {
 const ControlPanel = ({ userId, onAddDevice }: ControlPanelProps) => {
   const [devices, setDevices] = useState<Device[]>([]);
   const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
   // States for controls
@@ -60,7 +59,12 @@ const ControlPanel = ({ userId, onAddDevice }: ControlPanelProps) => {
   const [lightingOn, setLightingOn] = useState(false);
   const [heatingOn, setHeatingOn] = useState(false);
   const [wateringLevel, setWateringLevel] = useState(50);
+  
+  // Device Status
+  const [isOnline, setIsOnline] = useState(false);
+  const [lastSeen, setLastSeen] = useState<string>("...");
 
+  // States for edit
   const [editNameForDevice, setEditNameForDevice] = useState<string | null>(null);
   const [editedName, setEditedName] = useState<string>("");
 
@@ -75,7 +79,6 @@ const ControlPanel = ({ userId, onAddDevice }: ControlPanelProps) => {
                 setSelectedDevice(deviceList[0]);
             }
         } catch (err) {
-            setError("Nie udało się pobrać urządzeń.");
             setDevices([]);
         } finally {
             setLoading(false);
@@ -89,30 +92,45 @@ const ControlPanel = ({ userId, onAddDevice }: ControlPanelProps) => {
     const fetchStates = async () => {
         if (!selectedDevice) return;
         try {
-            const states = await getRelayStates(selectedDevice.deviceId);
-            // Reset local states to ensure we don't show stale "on" states
+            const { states, online } = await getRelayStates(selectedDevice.deviceId);
+            
+            setIsOnline(online);
+            // Reset local states
             setWateringOn(false);
             setVentilationOn(false);
             setLightingOn(false);
             setHeatingOn(false);
 
             if (Array.isArray(states)) {
+                // Update controls
                 states.forEach(r => {
                     const name = r.relay.toLowerCase();
-                    // Mapping based on known API responses (fan, led) and standard names
                     if (name === "water" || name === "pump") setWateringOn(r.state);
                     if (name === "fan") setVentilationOn(r.state);
                     if (name === "light" || name === "led") setLightingOn(r.state);
                     if (name === "heat" || name === "heater") setHeatingOn(r.state);
                 });
+
+                // Calculate Last Seen based on timestamps
+                const timestamps = states
+                    .filter(s => s.timestampUtc)
+                    .map(s => new Date(s.timestampUtc!).getTime());
+                
+                if (timestamps.length > 0) {
+                    const maxTime = Math.max(...timestamps);
+                    setLastSeen(new Date(maxTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'}));
+                } else {
+                    setLastSeen(online ? "Teraz" : "Nieznany");
+                }
             }
         } catch (err) {
             console.error("Failed to fetch relay states", err);
+            setIsOnline(false);
         }
     };
 
     fetchStates();
-    const interval = setInterval(fetchStates, 5000);
+    const interval = setInterval(fetchStates, 60000);
     return () => clearInterval(interval);
   }, [selectedDevice]);
 
@@ -224,10 +242,18 @@ const ControlPanel = ({ userId, onAddDevice }: ControlPanelProps) => {
                 <div className="device-header-info">
                     <h2>{selectedDevice.name}</h2>
                     <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
-                         <span className="status-badge">
-                            <span className="status-dot"></span> Online
+                         <div className={`status-badge ${isOnline ? '' : 'offline'}`} style={{
+                             backgroundColor: isOnline ? '#dcfce7' : '#fee2e2',
+                             color: isOnline ? '#15803d' : '#b91c1c'
+                         }}>
+                            <span className="status-dot" style={{
+                                backgroundColor: isOnline ? '#22c55e' : '#ef4444'
+                            }}></span> 
+                            {isOnline ? 'Online' : 'Offline'}
+                         </div>
+                         <span style={{color: '#94a3b8', fontSize: '0.875rem'}}>
+                            Ostatnia akt: {lastSeen}
                          </span>
-                         <span style={{color: '#94a3b8', fontSize: '0.875rem'}}>Ostatnia akt: teraz</span>
                     </div>
                 </div>
                 <button className="diagnostic-btn">

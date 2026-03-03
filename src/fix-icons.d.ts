@@ -2,7 +2,7 @@ import React from 'react';
 
 // This targets the base icon type used across the entire library
 declare module 'react-icons' {
-    export type IconType = (props: any) => JSX.Element;
+    export type IconType = (props: any) => React.ReactElement;
 }
 
 // This handles the specific sub-modules like 'ci' and 'gr'
