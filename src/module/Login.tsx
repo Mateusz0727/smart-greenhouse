@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { login } from "../services/AuthService";
 import { BiLeaf } from "react-icons/bi";
-import "../styles/login.css";
+import "../styles/Login.css";
 
 const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
