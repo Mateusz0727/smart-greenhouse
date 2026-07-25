@@ -8,7 +8,7 @@ import EspStatus from "./EspStatus";
 import TemperatureTrends from "../component/TemperatureTrends";
 import GreenhouseMap from "./GreenhouseMap";
 import { User, TemperatureData } from "../types";
-import "../styles/dashboard.css";
+import "../styles/Dashboard.css";
 
 function Dashboard() {
   const [user, setUser] = useState<User | null>(null);
